@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using CodeBase.Infrastructure.AssetManagement;
 using UnityEngine;
 using Zenject;
@@ -27,10 +28,11 @@ namespace CodeBase.Infrastructure.Factory
     /// <param name="parent">Optional parent <see cref="Transform"/> to which the GameObject can be attached.</param>
     /// <typeparam name="TValue"> component type, must be inherited from <see cref="Component"/>.</typeparam>
     /// <returns>Resulting component on GameObject created on scene.</returns>
-    protected TValue CreateAs<TValue>(string assetPath, Transform parent = null) where TValue : Component
+    protected async Task<TValue> CreateAs<TValue>(string assetPath, Transform parent = null) where TValue : Object
     {
-      TValue obj = _container.InstantiatePrefabForComponent<TValue>(Load<TValue>(assetPath), parent);
-      return obj;
+      TValue reference = await Load<TValue>(assetPath);
+      TValue gameObject = Instantiate(reference, parent);
+      return Inject(gameObject);
     }
 
     /// <summary>
@@ -42,11 +44,12 @@ namespace CodeBase.Infrastructure.Factory
     /// <param name="parent">Optional parent <see cref="Transform"/> to which the GameObject can be attached.</param>
     /// <typeparam name="TValue"> component type, must be inherited from <see cref="Component"/>.</typeparam>
     /// <returns>Resulting component on GameObject created on scene.</returns>
-    protected TValue CreateAs<TValue>(string assetPath, Vector3 position, Quaternion rotation, Transform parent = null)
-      where TValue : Component
+    protected async Task<TValue> CreateAs<TValue>(string assetPath, Vector3 position, Quaternion rotation, Transform parent = null)
+      where TValue : Object
     {
-      TValue obj = _container.InstantiatePrefabForComponent<TValue>(Load<TValue>(assetPath), position, rotation, parent);
-      return obj;
+      TValue reference = await Load<TValue>(assetPath);
+      TValue gameObject = Instantiate(reference, position, rotation, parent);
+      return Inject(gameObject);
     }
 
     /// <summary>
@@ -56,11 +59,8 @@ namespace CodeBase.Infrastructure.Factory
     /// <param name="assetPath">Path to asset.</param>
     /// <param name="parent">Optional parent <see cref="Transform"/> to which the GameObject can be attached.</param>
     /// <returns>Resulting <see cref="GameObject"/> created on scene.</returns>
-    protected GameObject CreateGameObject(string assetPath, Transform parent = null)
-    {
-      GameObject obj = _container.InstantiatePrefab(Load(assetPath), parent);
-      return obj;
-    }
+    protected async Task<GameObject> CreateGameObject(string assetPath, Transform parent = null) => 
+      await CreateAs<GameObject>(assetPath, parent);
 
     /// <summary>
     /// Creating a game object from a specific path.
@@ -70,16 +70,25 @@ namespace CodeBase.Infrastructure.Factory
     /// <param name="rotation">Rotation in world of created GameObject.</param>
     /// <param name="parent">Optional parent <see cref="Transform"/> to which the GameObject can be attached.</param>
     /// <returns>Resulting <see cref="GameObject"/> created on scene.</returns>
-    protected GameObject CreateGameObject(string assetPath, Vector3 position, Quaternion rotation, Transform parent = null)
+    protected async Task<GameObject> CreateGameObject(string assetPath, Vector3 position, Quaternion rotation, Transform parent = null) =>
+      await CreateAs<GameObject>(assetPath, position, rotation, parent);
+
+    private TValue Instantiate<TValue>(TValue reference, Transform parent = null) where TValue : Object => 
+      Object.Instantiate(reference, parent);
+
+    private TValue Instantiate<TValue>(TValue reference, Vector3 position, Quaternion rotation, Transform parent) where TValue : Object => 
+      Object.Instantiate(reference, position, rotation, parent);
+
+    private TValue Inject<TValue>(TValue obj) where TValue : Object
     {
-      GameObject obj = _container.InstantiatePrefab(Load(assetPath), position, rotation, parent);
+      _container.Inject(obj);
       return obj;
     }
 
-    private GameObject Load(string assetPath) =>
-      _assetProvider.Load(assetPath);
+    private Task<GameObject> Load(string assetPath) =>
+      _assetProvider.LoadGameObjectAsync(assetPath);
 
-    private TValue Load<TValue>(string assetPath) where TValue : Component =>
-      _assetProvider.LoadAs<TValue>(assetPath);
+    private Task<TValue> Load<TValue>(string assetPath) where TValue : Object =>
+      _assetProvider.LoadAsyncAs<TValue>(assetPath);
   }
 }
