@@ -6,5 +6,6 @@ namespace CodeBase.Infrastructure.AssetManagement
    public static class AssetsPath
    {
       public const string LoadingCurtain = "Loading Curtain";
+      public const string Agent = "Agent";
    }
 }

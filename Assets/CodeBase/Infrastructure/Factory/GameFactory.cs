@@ -1,4 +1,4 @@
-using System;
+using System.Threading.Tasks;
 using CodeBase.Infrastructure.AssetManagement;
 using UnityEngine;
 using Zenject;
@@ -15,10 +15,9 @@ namespace CodeBase.Infrastructure.Factory
   {
     public GameFactory(DiContainer container, IAssetProvider assetProvider) : base(container, assetProvider) { }
 
-    public GameObject CreateSomething(Vector3 position, Quaternion rotation, Transform parent = null)
+    public Task<GameObject> CreateAgent(Vector3 position, Quaternion rotation, Transform parent = null)
     {
-      throw new NotImplementedException();
-      return CreateGameObject("AssetPath", position, rotation, parent);
+      return CreateGameObject(AssetsPath.Agent, position, rotation, parent);
     }
   }
 }
