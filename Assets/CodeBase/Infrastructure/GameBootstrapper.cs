@@ -26,6 +26,7 @@ namespace CodeBase.Infrastructure
       BindCoroutineRunner();
       BindProgressCurtain();
       BindAssetProvider();
+      BindGameFactory();
       BindSceneLoader();
       
       BindGameStateMachine();
@@ -53,7 +54,12 @@ namespace CodeBase.Infrastructure
                                                          .NonLazy();
 
     private void BindAssetProvider()         => Container.Bind<IAssetProvider>()
-                                                         .To<ResourcesAssetProvider>()
+                                                         .To<AssetProvider>()
+                                                         .AsSingle()
+                                                         .NonLazy();
+
+    private void BindGameFactory()           => Container.Bind<IGameFactory>()
+                                                         .To<GameFactory>()
                                                          .AsSingle()
                                                          .NonLazy();
 
@@ -75,7 +81,7 @@ namespace CodeBase.Infrastructure
     private TValue Load<TValue>(InjectContext context, string path) where TValue : Object
     {
       _assetProvider ??= context.Container.Resolve<IAssetProvider>();
-      return _assetProvider.LoadAs<TValue>(path);
+      return _assetProvider.LoadResourcesAs<TValue>(path);
     }
   }
 }
